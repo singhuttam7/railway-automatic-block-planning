@@ -26,9 +26,19 @@ class MaintenanceTask(Base):
     )
 
     priority: Mapped[int] = mapped_column(
-        Integer,
-        nullable=False
-    )
+    Integer,
+    nullable=False
+)
+
+    priority_score: Mapped[float | None] = mapped_column(
+    Float,
+    nullable=True
+)
+
+    priority_level: Mapped[str | None] = mapped_column(
+    String(20),
+    nullable=True
+)
 
     due_date: Mapped[date] = mapped_column(
         Date,
