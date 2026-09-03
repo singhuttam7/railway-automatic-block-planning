@@ -1,7 +1,6 @@
-
 from datetime import date
 
-from sqlalchemy import Date, Integer, String, ForeignKey
+from sqlalchemy import Date, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -20,18 +19,43 @@ class Defect(Base):
         nullable=False
     )
 
-    severity: Mapped[int] = mapped_column(
+    defect_type: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False
+    )
+
+    severity: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False
+    )
+
+    severity_score: Mapped[int] = mapped_column(
         Integer,
         nullable=False
     )
 
-    description: Mapped[str] = mapped_column(
-        String(255),
+    detected_date: Mapped[date] = mapped_column(
+        Date,
         nullable=False
     )
 
-    reported_date: Mapped[date] = mapped_column(
+    target_resolution_date: Mapped[date] = mapped_column(
         Date,
+        nullable=False
+    )
+
+    estimated_repair_hours: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False
+    )
+
+    safety_risk: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False
+    )
+
+    operational_impact: Mapped[int] = mapped_column(
+        Integer,
         nullable=False
     )
 
@@ -44,4 +68,3 @@ class Defect(Base):
         "Asset",
         back_populates="defects"
     )
-
