@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 
 from app.routes.priority import router as priority_router
+from app.routes.optimized_blocks import router as optimized_blocks_router
+from app.routes.planning import router as planning_router
 
 app = FastAPI(
     title="Railway Automatic Block Planning",
@@ -9,6 +11,9 @@ app = FastAPI(
 )
 
 app.include_router(priority_router)
+app.include_router(optimized_blocks_router)
+app.include_router(planning_router)
+
 
 
 @app.get("/")
@@ -24,3 +29,4 @@ def health_check():
     return {
         "status": "healthy"
     }
+

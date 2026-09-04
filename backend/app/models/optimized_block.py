@@ -14,6 +14,11 @@ class OptimizedBlock(Base):
         primary_key=True
     )
 
+    optimization_run_id: Mapped[int] = mapped_column(
+        ForeignKey("optimization_runs.optimization_run_id"),
+        nullable=False
+    )
+
     corridor_id: Mapped[str] = mapped_column(
         ForeignKey("corridors.corridor_id"),
         nullable=False
@@ -52,6 +57,11 @@ class OptimizedBlock(Base):
     status: Mapped[str] = mapped_column(
         String(50),
         nullable=False
+    )
+
+    optimization_run = relationship(
+        "OptimizationRun",
+        back_populates="optimized_blocks"
     )
 
     corridor = relationship(

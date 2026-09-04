@@ -9,6 +9,7 @@ from app.models.goods_forecast import GoodsForecast
 from app.models.block_request import BlockRequest
 from app.models.optimized_block import OptimizedBlock
 from app.models.optimized_block_request import OptimizedBlockRequest
+from app.models.optimization_run import OptimizationRun
 
 
 __all__ = [
@@ -21,6 +22,7 @@ __all__ = [
     "GoodsForecast",
     "BlockRequest",
     "OptimizedBlock",
-    "OptimizedBlockRequest"
+    "OptimizedBlockRequest",
+    "OptimizationRun"
 ]
 
