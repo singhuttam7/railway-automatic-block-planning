@@ -1,4 +1,3 @@
-
 from datetime import date, time
 
 from sqlalchemy import Date, Float, ForeignKey, Integer, String, Time
@@ -13,11 +12,6 @@ class OptimizedBlock(Base):
     optimized_block_id: Mapped[str] = mapped_column(
         String(20),
         primary_key=True
-    )
-
-    block_request_id: Mapped[str] = mapped_column(
-        ForeignKey("block_requests.block_request_id"),
-        nullable=False
     )
 
     corridor_id: Mapped[str] = mapped_column(
@@ -60,13 +54,13 @@ class OptimizedBlock(Base):
         nullable=False
     )
 
-    block_request = relationship(
-        "BlockRequest",
-        back_populates="optimized_blocks"
-    )
-
     corridor = relationship(
         "Corridor",
         back_populates="optimized_blocks"
     )
 
+    block_requests = relationship(
+        "BlockRequest",
+        secondary="optimized_block_requests",
+        back_populates="optimized_blocks"
+    )

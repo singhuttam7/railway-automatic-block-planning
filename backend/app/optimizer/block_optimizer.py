@@ -191,11 +191,9 @@ class BlockOptimizer:
             # Fetch goods-train forecasts
             # ----------------------------------------------------
 
-            goods_forecasts = (
-                self.fetch_goods_forecasts(
-                    corridor_id,
-                    block_date
-                )
+            goods_forecasts = self.fetch_goods_forecasts(
+                corridor_id,
+                block_date
             )
 
             # ----------------------------------------------------
@@ -249,6 +247,158 @@ class BlockOptimizer:
             )
 
         return results
+
+    # ============================================================
+    # 5.6 PREPARE OPTIMIZATION CANDIDATES
+    # ============================================================
+
+    def prepare_optimization_candidates(
+        self,
+        groups,
+        constraint_results
+    ):
+        """
+        Convert candidate block groups and their constraint
+        analysis into a format suitable for OR-Tools.
+        """
+
+        candidates = []
+
+        for index, group in enumerate(
+            groups,
+            start=1
+        ):
+
+            requests = [
+                item[0]
+                for item in group
+            ]
+
+            tasks = [
+                item[1]
+                for item in group
+            ]
+
+            # ----------------------------------------------------
+            # Candidate time window
+            # ----------------------------------------------------
+
+            start_time = min(
+                request.start_time
+                for request in requests
+            )
+
+            end_time = max(
+                request.end_time
+                for request in requests
+            )
+
+            # ----------------------------------------------------
+            # Duration
+            # ----------------------------------------------------
+
+            start_datetime = datetime.combine(
+                requests[0].requested_date,
+                start_time
+            )
+
+            end_datetime = datetime.combine(
+                requests[0].requested_date,
+                end_time
+            )
+
+            duration_hours = (
+                end_datetime - start_datetime
+            ).total_seconds() / 3600
+
+            # ----------------------------------------------------
+            # Total requested duration
+            # ----------------------------------------------------
+
+            total_requested_duration = sum(
+                request.duration_hours
+                for request in requests
+            )
+
+            # ----------------------------------------------------
+            # Time saving
+            # ----------------------------------------------------
+
+            time_saving = (
+                total_requested_duration
+                - duration_hours
+            )
+
+            # ----------------------------------------------------
+            # Department count
+            # ----------------------------------------------------
+
+            departments = {
+                task.asset.department_id
+                for task in tasks
+            }
+
+            department_count = len(
+                departments
+            )
+
+            # ----------------------------------------------------
+            # Priority
+            # ----------------------------------------------------
+
+            priority_score = max(
+                (
+                    task.priority_score
+                    if task.priority_score is not None
+                    else 0
+                )
+                for task in tasks
+            )
+
+            # ----------------------------------------------------
+            # Constraint information
+            # ----------------------------------------------------
+
+            constraint = constraint_results[index - 1]
+
+            train_conflict_count = (
+                constraint["train_conflict_count"]
+            )
+
+            goods_conflict_count = (
+                constraint["goods_conflict_count"]
+            )
+
+            # ----------------------------------------------------
+            # Candidate block
+            # ----------------------------------------------------
+
+            candidate = {
+                "candidate_block": index,
+                "corridor_id": requests[0].corridor_id,
+                "block_date": requests[0].requested_date,
+                "start_time": start_time,
+                "end_time": end_time,
+                "duration_hours": duration_hours,
+                "time_saving": time_saving,
+                "department_count": department_count,
+                "priority_score": priority_score,
+                "train_conflict_count": train_conflict_count,
+                "goods_conflict_count": goods_conflict_count,
+
+                # Original block requests included in
+                # this coordinated candidate block.
+                "block_request_ids": [
+                    request.block_request_id
+                    for request in requests
+                ],
+            }
+
+            candidates.append(
+                candidate
+            )
+
+        return candidates
 
     # ============================================================
     # 5.5 DISPLAY CONSTRAINT ANALYSIS
@@ -475,188 +625,86 @@ class BlockOptimizer:
     # DISPLAY CANDIDATE BLOCKS
     # ============================================================
 
-    def display_candidate_blocks(
-        self,
-        groups
-    ):
-        """
-        Display candidate coordinated blocks.
-
-        A candidate block is created by combining
-        overlapping maintenance requests.
-        """
-
+    def display_candidate_blocks(self, candidates):
         print("\n" + "=" * 80)
-        print("CANDIDATE COORDINATED BLOCKS")
+        print("CANDIDATE BLOCKS")
         print("=" * 80)
 
-        for index, group in enumerate(
-            groups,
-            start=1
-        ):
-
-            # ----------------------------------------------------
-            # Separate requests and tasks
-            # ----------------------------------------------------
-
-            requests = [
-                item[0]
-                for item in group
-            ]
-
-            tasks = [
-                item[1]
-                for item in group
-            ]
-
-            # ----------------------------------------------------
-            # Earliest start time
-            # ----------------------------------------------------
-
-            start_time = min(
-                request.start_time
-                for request in requests
-            )
-
-            # ----------------------------------------------------
-            # Latest end time
-            # ----------------------------------------------------
-
-            end_time = max(
-                request.end_time
-                for request in requests
-            )
-
-            # ----------------------------------------------------
-            # Find departments involved
-            # ----------------------------------------------------
-
-            departments = set()
-
-            for task in tasks:
-
-                departments.add(
-                    task.asset.department_id
-                )
-
-            # ----------------------------------------------------
-            # Corridor and date
-            # ----------------------------------------------------
-
-            corridor = requests[0].corridor_id
-            block_date = requests[0].requested_date
-
-            # ----------------------------------------------------
-            # Total individual duration
-            # ----------------------------------------------------
-
-            total_requested_duration = sum(
-                request.duration_hours
-                for request in requests
-            )
-
-            # ----------------------------------------------------
-            # Candidate block duration
-            # ----------------------------------------------------
-
-            start_datetime = datetime.combine(
-                block_date,
-                start_time
-            )
-
-            end_datetime = datetime.combine(
-                block_date,
-                end_time
-            )
-
-            candidate_duration = (
-                end_datetime - start_datetime
-            ).total_seconds() / 3600
-
-            # ----------------------------------------------------
-            # Potential time saving
-            # ----------------------------------------------------
-
-            time_saved = (
-                total_requested_duration
-                - candidate_duration
-            )
-
-            # ----------------------------------------------------
-            # Display block
-            # ----------------------------------------------------
+        for candidate in candidates:
 
             print(
-                f"\nCandidate Block {index}"
+                f"\nCandidate Block "
+                f"{candidate['candidate_block']}"
             )
 
             print("-" * 80)
 
             print(
-                f"Corridor                 : "
-                f"{corridor}"
+                f"Corridor          : "
+                f"{candidate['corridor_id']}"
             )
 
             print(
-                f"Date                     : "
-                f"{block_date}"
+                f"Date              : "
+                f"{candidate['block_date']}"
             )
 
             print(
-                f"Time                     : "
-                f"{start_time} - "
-                f"{end_time}"
+                f"Time              : "
+                f"{candidate['start_time']} - "
+                f"{candidate['end_time']}"
             )
 
             print(
-                f"Candidate Duration       : "
-                f"{candidate_duration:.2f} hours"
+                f"Duration          : "
+                f"{candidate['duration_hours']:.2f} hours"
             )
 
             print(
-                f"Individual Duration      : "
-                f"{total_requested_duration:.2f} hours"
+                f"Priority Score    : "
+                f"{candidate['priority_score']:.2f}"
             )
 
             print(
-                f"Potential Time Saving    : "
-                f"{time_saved:.2f} hours"
+                f"Departments       : "
+                f"{candidate['department_count']}"
             )
 
             print(
-                f"Requests                 : "
-                f"{len(requests)}"
+                f"Time Saving       : "
+                f"{candidate['time_saving']:.2f} hours"
             )
 
             print(
-                f"Departments              : "
-                f"{len(departments)}"
+                f"Train Conflicts   : "
+                f"{candidate['train_conflict_count']}"
             )
 
-            print("Block Requests:")
+            print(
+                f"Goods Conflicts   : "
+                f"{candidate['goods_conflict_count']}"
+            )
 
-            for request, task in group:
+            # ----------------------------------------------------
+            # Original block requests
+            # ----------------------------------------------------
 
-                priority_score = (
-                    task.priority_score
-                    if task.priority_score is not None
-                    else 0
-                )
+            block_request_ids = candidate.get(
+                "block_request_ids",
+                []
+            )
 
-                priority_level = (
-                    task.priority_level
-                    if task.priority_level is not None
-                    else "Not Calculated"
-                )
+            if block_request_ids:
 
                 print(
-                    f"  {request.block_request_id} | "
-                    f"{task.task_id} | "
-                    f"{request.start_time} - "
-                    f"{request.end_time} | "
-                    f"Priority: "
-                    f"{priority_score:.2f} | "
-                    f"{priority_level}"
+                    f"Block Requests    : "
+                    f"{', '.join(block_request_ids)}"
+                )
+
+            else:
+
+                print(
+                    "Block Requests    : None"
                 )
 
     # ============================================================
@@ -749,9 +797,7 @@ class BlockOptimizer:
         maintenance priority.
         """
 
-        requests = (
-            self.fetch_block_requests()
-        )
+        requests = self.fetch_block_requests()
 
         print("\n" + "=" * 80)
         print("BLOCK REQUESTS FOR OPTIMIZATION")
@@ -862,22 +908,37 @@ if __name__ == "__main__":
             )
 
         # ---------------------------------------------------------
-        # Step 5: Display candidate blocks
+        # Step 5: Analyze constraints
         # ---------------------------------------------------------
-
-        optimizer.display_candidate_blocks(
-            groups
-        )
-
-        # =========================================================
-        # 5.5 TRAIN & GOODS-TRAIN CONSTRAINTS
-        # =========================================================
 
         constraint_results = (
             optimizer.analyze_block_constraints(
                 groups
             )
         )
+
+        # ---------------------------------------------------------
+        # Step 6: Prepare optimization candidates
+        # ---------------------------------------------------------
+
+        candidates = (
+            optimizer.prepare_optimization_candidates(
+                groups,
+                constraint_results
+            )
+        )
+
+        # ---------------------------------------------------------
+        # Step 7: Display candidate blocks
+        # ---------------------------------------------------------
+
+        optimizer.display_candidate_blocks(
+            candidates
+        )
+
+        # ---------------------------------------------------------
+        # Step 8: Display constraint analysis
+        # ---------------------------------------------------------
 
         optimizer.display_constraint_analysis(
             constraint_results

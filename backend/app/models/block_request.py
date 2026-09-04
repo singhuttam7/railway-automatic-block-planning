@@ -71,7 +71,8 @@ class BlockRequest(Base):
     )
 
     optimized_blocks = relationship(
-        "OptimizedBlock",
-        back_populates="block_request"
-    )
+    "OptimizedBlock",
+    secondary="optimized_block_requests",
+    back_populates="block_requests"
+)
 
