@@ -463,11 +463,11 @@ function BlockPlanning() {
         )}
       </div>
       {selectedBlock && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[#0b1729] shadow-2xl"
+            className="my-auto flex max-h-[calc(100vh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0b1729] shadow-2xl"
           >
             <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
               <div>
@@ -487,73 +487,74 @@ function BlockPlanning() {
                 Close
               </button>
             </div>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <p className="text-xs text-slate-500">Corridor</p>
+                  <p className="mt-1 text-sm font-semibold text-white">
+                    {selectedBlock.corridor_id}
+                  </p>
+                </div>
 
-            <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-4">
-              <div>
-                <p className="text-xs text-slate-500">Corridor</p>
-                <p className="mt-1 text-sm font-semibold text-white">
-                  {selectedBlock.corridor_id}
-                </p>
+                <div>
+                  <p className="text-xs text-slate-500">Date</p>
+                  <p className="mt-1 text-sm font-semibold text-white">
+                    {selectedBlock.block_date}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-slate-500">Time</p>
+                  <p className="mt-1 text-sm font-semibold text-white">
+                    {selectedBlock.start_time} - {selectedBlock.end_time}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-slate-500">Departments</p>
+                  <p className="mt-1 text-sm font-semibold text-white">
+                    {selectedBlock.department_count}
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <p className="text-xs text-slate-500">Date</p>
-                <p className="mt-1 text-sm font-semibold text-white">
-                  {selectedBlock.block_date}
-                </p>
-              </div>
+              <div className="border-t border-white/10 px-6 py-5">
+                <h3 className="text-sm font-semibold text-white">
+                  Coordinated Maintenance Requests
+                </h3>
 
-              <div>
-                <p className="text-xs text-slate-500">Time</p>
-                <p className="mt-1 text-sm font-semibold text-white">
-                  {selectedBlock.start_time} - {selectedBlock.end_time}
-                </p>
-              </div>
+                <div className="mt-4 space-y-3">
+                  {selectedBlock.block_requests.map((request) => (
+                    <div
+                      key={request.block_request_id}
+                      className="rounded-xl border border-white/10 bg-white/[0.03] p-4"
+                    >
+                      <div className="flex flex-col justify-between gap-2 sm:flex-row">
+                        <div>
+                          <p className="font-mono text-sm text-blue-300">
+                            {request.block_request_id}
+                          </p>
 
-              <div>
-                <p className="text-xs text-slate-500">Departments</p>
-                <p className="mt-1 text-sm font-semibold text-white">
-                  {selectedBlock.department_count}
-                </p>
-              </div>
-            </div>
+                          <p className="mt-1 text-sm text-slate-300">
+                            Task: {request.task_id}
+                          </p>
+                        </div>
 
-            <div className="border-t border-white/10 px-6 py-5">
-              <h3 className="text-sm font-semibold text-white">
-                Coordinated Maintenance Requests
-              </h3>
-
-              <div className="mt-4 space-y-3">
-                {selectedBlock.block_requests.map((request) => (
-                  <div
-                    key={request.block_request_id}
-                    className="rounded-xl border border-white/10 bg-white/[0.03] p-4"
-                  >
-                    <div className="flex flex-col justify-between gap-2 sm:flex-row">
-                      <div>
-                        <p className="font-mono text-sm text-blue-300">
-                          {request.block_request_id}
-                        </p>
-
-                        <p className="mt-1 text-sm text-slate-300">
-                          Task: {request.task_id}
-                        </p>
+                        <span className="h-fit rounded-full bg-emerald-400/10 px-3 py-1 text-xs text-emerald-300">
+                          {request.status}
+                        </span>
                       </div>
 
-                      <span className="h-fit rounded-full bg-emerald-400/10 px-3 py-1 text-xs text-emerald-300">
-                        {request.status}
-                      </span>
+                      <div className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-3">
+                        <span>Location: {request.location_km} km</span>
+                        <span>
+                          Requested: {request.start_time} - {request.end_time}
+                        </span>
+                        <span>Duration: {request.duration_hours} hrs</span>
+                      </div>
                     </div>
-
-                    <div className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-3">
-                      <span>Location: {request.location_km} km</span>
-                      <span>
-                        Requested: {request.start_time} - {request.end_time}
-                      </span>
-                      <span>Duration: {request.duration_hours} hrs</span>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </motion.div>

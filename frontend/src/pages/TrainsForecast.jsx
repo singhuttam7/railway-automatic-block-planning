@@ -216,9 +216,9 @@ function TrainsForecast() {
       </div>
 
       {/* Main Grid */}
-      <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+      <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr] xl:h-[720px]">
         {/* Train Schedule */}
-        <section className="min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025]">
+        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025]">
           <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
             <div>
               <h2 className="font-semibold text-white">Train Schedule</h2>
@@ -242,7 +242,7 @@ function TrainsForecast() {
               ))}
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="min-h-0 flex-1 overflow-auto">
               <table className="w-full min-w-[720px] text-left">
                 <thead>
                   <tr className="border-b border-white/10 text-[11px] uppercase tracking-wider text-slate-500">
@@ -309,7 +309,7 @@ function TrainsForecast() {
         </section>
 
         {/* Goods Forecast */}
-        <section className="min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025]">
+        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025]">
           <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
             <div>
               <h2 className="font-semibold text-white">Goods Train Forecast</h2>
@@ -323,7 +323,7 @@ function TrainsForecast() {
             </div>
           </div>
 
-          <div className="max-h-[620px] overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <div className="space-y-3 p-4">
               {filteredForecasts.map((forecast, index) => (
                 <motion.div

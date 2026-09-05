@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   CalendarDays,
@@ -57,6 +58,7 @@ const cardData = [
 ];
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState(null);
   const [optimizedBlocks, setOptimizedBlocks] = useState([]);
@@ -189,27 +191,51 @@ function Dashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.08 }}
-              whileHover={{ y: -4 }}
-              className="group rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-xl shadow-black/10 transition-colors duration-300 hover:border-blue-400/20 hover:bg-white/[0.05]"
+              whileHover={{ y: -5 }}
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-xl shadow-black/10 transition-all duration-300 hover:border-blue-400/30 hover:bg-white/[0.055] hover:shadow-blue-500/5"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400 ring-1 ring-blue-400/10">
-                  <Icon className="h-5 w-5" />
+              {/* Hover glow */}
+              <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-blue-500/10 blur-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+              <div className="relative">
+                <div className="flex items-start justify-between">
+                  <motion.div
+                    whileHover={{ scale: 1.08, rotate: 3 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                    className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400 ring-1 ring-blue-400/10 transition-all duration-300 group-hover:bg-blue-500/15 group-hover:ring-blue-400/20"
+                  >
+                    <Icon className="h-5 w-5" />
+                  </motion.div>
+
+                  <ArrowUpRight className="h-4 w-4 text-slate-600 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-blue-400" />
                 </div>
 
-                <ArrowUpRight className="h-4 w-4 text-slate-600 transition-colors group-hover:text-blue-400" />
+                <p className="mt-5 text-sm font-medium text-slate-400">
+                  {card.title}
+                </p>
+
+                <div className="mt-1 flex items-baseline gap-1">
+                  <p className="text-3xl font-bold tracking-tight text-white transition-colors duration-300 group-hover:text-blue-50">
+                    {summary[card.key]}
+                  </p>
+
+                  <span className="text-lg font-medium text-slate-500">
+                    {card.suffix}
+                  </span>
+                </div>
+
+                <p className="mt-2 text-xs text-slate-500">
+                  {card.description}
+                </p>
+
+                {/* Bottom status indicator */}
+                <div className="mt-4 flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]" />
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-slate-600">
+                    Live data
+                  </span>
+                </div>
               </div>
-
-              <p className="mt-5 text-sm text-slate-400">{card.title}</p>
-
-              <p className="mt-1 text-3xl font-bold tracking-tight text-white">
-                {summary[card.key]}
-                <span className="ml-1 text-lg font-medium text-slate-500">
-                  {card.suffix}
-                </span>
-              </p>
-
-              <p className="mt-2 text-xs text-slate-500">{card.description}</p>
             </motion.div>
           );
         })}
@@ -222,43 +248,106 @@ function Dashboard() {
           initial={{ opacity: 0, x: -15 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.35 }}
-          className="rounded-2xl border border-white/10 bg-white/[0.035] p-6 xl:col-span-1"
+          whileHover={{ y: -3 }}
+          className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] p-6 shadow-xl shadow-black/10 transition-all duration-300 hover:border-blue-400/25 hover:bg-white/[0.05]"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-300">
-                Optimization Score
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                Overall planning quality
-              </p>
-            </div>
+          {/* Ambient glow */}
+          <div className="pointer-events-none absolute -left-16 -top-16 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl opacity-60" />
 
-            <TrendingUp className="h-5 w-5 text-emerald-400" />
-          </div>
-
-          <div className="mt-7 flex flex-col gap-6 2xl:flex-row 2xl:items-center">
-            <div className="relative mx-auto flex h-28 w-28 shrink-0 items-center justify-center rounded-full border-[9px] border-blue-500/20 2xl:mx-0">
-              <div className="absolute inset-0 rounded-full border-[10px] border-transparent border-t-blue-400 border-r-blue-400 rotate-[-35deg]" />
-
-              <div className="text-center">
-                <p className="text-3xl font-bold text-white">
-                  {summary.average_optimization_score}
+          <div className="relative">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-300">
+                  Optimization Score
                 </p>
-                <p className="text-[10px] uppercase tracking-wider text-slate-500">
-                  Score
+
+                <p className="mt-1 text-xs text-slate-500">
+                  Overall planning quality
                 </p>
+              </div>
+
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 ring-1 ring-emerald-400/10">
+                <TrendingUp className="h-4 w-4 text-emerald-400" />
               </div>
             </div>
 
-            <div className="min-w-0 text-center 2xl:text-left">
-              <p className="text-sm font-semibold text-emerald-400">
-                Optimization Active
-              </p>
-              <p className="mt-2 text-xs leading-relaxed text-slate-500">
-                The planning engine evaluates maintenance priority, coordination
-                opportunities and operational constraints.
-              </p>
+            <div className="mt-7 flex flex-col items-center gap-6 sm:flex-row sm:justify-center 2xl:justify-start">
+              {/* Score ring */}
+              <div className="relative flex h-32 w-32 shrink-0 items-center justify-center">
+                <svg
+                  className="absolute inset-0 h-full w-full -rotate-90"
+                  viewBox="0 0 120 120"
+                >
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="50"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.06)"
+                    strokeWidth="9"
+                  />
+
+                  <motion.circle
+                    cx="60"
+                    cy="60"
+                    r="50"
+                    fill="none"
+                    stroke="#38bdf8"
+                    strokeWidth="9"
+                    strokeLinecap="round"
+                    strokeDasharray={314}
+                    initial={{ strokeDashoffset: 314 }}
+                    animate={{
+                      strokeDashoffset:
+                        314 -
+                        (314 *
+                          Math.min(summary.average_optimization_score, 100)) /
+                          100,
+                    }}
+                    transition={{ duration: 1.4, ease: "easeOut" }}
+                  />
+                </svg>
+
+                <div className="relative text-center">
+                  <p className="text-3xl font-bold tracking-tight text-white">
+                    {summary.average_optimization_score}
+                  </p>
+
+                  <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-500">
+                    Score
+                  </p>
+                </div>
+              </div>
+
+              {/* Score information */}
+              <div className="min-w-0 text-center sm:text-left">
+                <div className="flex items-center justify-center gap-2 sm:justify-start">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]" />
+
+                  <p className="text-sm font-semibold text-emerald-400">
+                    Optimization Active
+                  </p>
+                </div>
+
+                <p className="mt-2 max-w-xs text-xs leading-relaxed text-slate-500">
+                  The planning engine evaluates maintenance priority,
+                  coordination opportunities and operational constraints.
+                </p>
+
+                <div className="mt-4 inline-flex items-center rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+                  <span className="text-[10px] uppercase tracking-wider text-slate-600">
+                    Planning quality
+                  </span>
+
+                  <span className="ml-2 text-xs font-semibold text-blue-300">
+                    {summary.average_optimization_score >= 70
+                      ? "Excellent"
+                      : summary.average_optimization_score >= 50
+                        ? "Good"
+                        : "Needs improvement"}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -336,7 +425,7 @@ function Dashboard() {
         transition={{ delay: 0.45 }}
         className="rounded-2xl border border-white/10 bg-white/[0.035] p-6"
       >
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-base font-semibold text-white">
               Optimized Blocks by Corridor
@@ -348,8 +437,18 @@ function Dashboard() {
             </p>
           </div>
 
-          <div className="rounded-xl bg-blue-500/10 p-2.5 text-blue-400">
-            <Network className="h-5 w-5" />
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate("/blocks")}
+              className="group flex items-center gap-1.5 rounded-lg border border-blue-400/20 bg-blue-500/10 px-3 py-2 text-xs font-medium text-blue-300 transition-all duration-300 hover:border-blue-400/40 hover:bg-blue-500/20"
+            >
+              View Block Plan
+              <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            </button>
+
+            <div className="rounded-xl bg-blue-500/10 p-2.5 text-blue-400">
+              <Network className="h-5 w-5" />
+            </div>
           </div>
         </div>
 
@@ -681,6 +780,115 @@ function Dashboard() {
           {summary.total_block_hours} hours of maintenance capacity planned
         </p>
       </motion.div>
+
+      {/* Creator Footer */}
+      <motion.footer
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.65, duration: 0.5 }}
+        className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-white/[0.025] via-blue-500/[0.04] to-white/[0.025] px-5 py-5"
+      >
+        {/* Ambient glow */}
+        <div className="pointer-events-none absolute -left-16 -top-16 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -right-16 h-40 w-40 rounded-full bg-cyan-400/10 blur-3xl" />
+
+        <div className="relative flex flex-col items-center justify-between gap-5 sm:flex-row">
+          {/* Creator Information */}
+          <div className="text-center sm:text-left">
+            <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-blue-400/70">
+              Created by
+            </p>
+
+            <motion.p
+              whileHover={{ x: 3 }}
+              className="mt-1 text-sm font-semibold tracking-wide text-white"
+            >
+              Uttam Kumar Singh
+            </motion.p>
+
+            <p className="mt-1 text-[10px] text-slate-500">
+              AI-Powered Railway Block Planning System
+            </p>
+          </div>
+
+          {/* Social Links */}
+          <div className="flex items-center gap-2">
+            {/* GitHub */}
+            <motion.a
+              href="https://github.com/singhuttam7"
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ y: -3, scale: 1.08 }}
+              whileTap={{ scale: 0.95 }}
+              className="group flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-slate-500 transition-all duration-300 hover:border-white/25 hover:bg-white/10 hover:text-white"
+              aria-label="GitHub"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-5 w-5 transition-transform duration-300 group-hover:rotate-6"
+              >
+                <path d="M12 2C6.48 2 2 6.58 2 12.24c0 4.52 2.87 8.35 6.84 9.7.5.1.68-.22.68-.49v-1.7c-2.78.62-3.37-1.22-3.37-1.22-.46-1.2-1.11-1.52-1.11-1.52-.91-.64.07-.63.07-.63 1.01.08 1.55 1.07 1.55 1.07.9 1.58 2.35 1.12 2.92.86.09-.67.35-1.12.64-1.38-2.22-.26-4.55-1.14-4.55-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.25 9.25 0 0 1 12 8.9c.85 0 1.71.12 2.51.36 1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.93-2.33 4.8-4.56 5.05.36.32.68.95.68 1.92v2.85c0 .27.18.59.69.49A10.26 10.26 0 0 0 22 12.24C22 6.58 17.52 2 12 2Z" />
+              </svg>
+            </motion.a>
+
+            {/* LinkedIn */}
+            <motion.a
+              href="https://www.linkedin.com/in/uttam-singh-b936a1310/"
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ y: -3, scale: 1.08 }}
+              whileTap={{ scale: 0.95 }}
+              className="group flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-slate-500 transition-all duration-300 hover:border-blue-400/30 hover:bg-blue-500/10 hover:text-blue-400"
+              aria-label="LinkedIn"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-5 w-5 transition-transform duration-300 group-hover:scale-110"
+              >
+                <path d="M20.45 20.45h-3.56v-5.58c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.68H9.35V8.99h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.26 2.37 4.26 5.46v6.29ZM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14ZM3.56 20.45h3.56V8.99H3.56v11.46Z" />
+              </svg>
+            </motion.a>
+
+            {/* Instagram */}
+            <motion.a
+              href="https://www.instagram.com/singh_uttam790"
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ y: -3, scale: 1.08 }}
+              whileTap={{ scale: 0.95 }}
+              className="group flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-slate-500 transition-all duration-300 hover:border-pink-400/30 hover:bg-pink-500/10 hover:text-pink-400"
+              aria-label="Instagram"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                className="h-5 w-5 transition-transform duration-300 group-hover:scale-110"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle
+                  cx="17.3"
+                  cy="6.7"
+                  r="1"
+                  fill="currentColor"
+                  stroke="none"
+                />
+              </svg>
+            </motion.a>
+          </div>
+        </div>
+
+        {/* Copyright */}
+        <div className="relative mt-4 border-t border-white/5 pt-3 text-center">
+          <p className="text-[10px] tracking-wide text-slate-600">
+            © 2026 Uttam Kumar Singh · All Rights Reserved
+          </p>
+        </div>
+      </motion.footer>
     </div>
   );
 }

@@ -382,6 +382,80 @@ function AIIntelligence() {
           ))}
         </div>
       </motion.div>
+      {/* Developer Footer */}
+      <motion.footer
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="mt-10 border-t border-white/10 pt-8 pb-4"
+      >
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          {/* Project Info */}
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-400/10 text-blue-300">
+                <BrainCircuit size={18} />
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-white">
+                  AI-Powered Railway Block Planning
+                </p>
+                <p className="text-xs text-slate-500">
+                  Intelligent maintenance optimization system
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Developer */}
+          <div className="text-left md:text-right">
+            <p className="text-xs uppercase tracking-wider text-slate-500">
+              Developed by
+            </p>
+
+            <p className="mt-1 text-sm font-semibold text-slate-200">
+              Uttam Kumar Singh
+            </p>
+
+            <div className="mt-2 flex items-center gap-4 md:justify-end">
+              <a
+                href="https://github.com/singhuttam7"
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-slate-400 transition hover:text-blue-300"
+              >
+                GitHub
+              </a>
+
+              <a
+                href="https://www.linkedin.com/in/uttam-singh-b936a1310/"
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-slate-400 transition hover:text-blue-300"
+              >
+                LinkedIn
+              </a>
+
+              <a
+                href="https://www.instagram.com/singh_uttam790"
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-slate-400 transition hover:text-pink-300"
+              >
+                Instagram
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Copyright */}
+        <div className="mt-7 flex flex-col gap-2 border-t border-white/5 pt-4 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+          <span>© 2026 Uttam Kumar Singh · All Rights Reserved</span>
+
+          <span>AI • Optimization • Railway Operations</span>
+        </div>
+      </motion.footer>
 
       {/* Footer Status */}
       <div className="flex flex-col gap-2 border-t border-white/5 pt-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">

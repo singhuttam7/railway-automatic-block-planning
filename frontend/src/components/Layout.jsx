@@ -145,9 +145,9 @@ function Layout() {
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ duration: 0.25 }}
-              className="fixed inset-y-0 left-0 z-50 w-72 border-r border-white/10 bg-[#0a1628]"
+              className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-hidden border-r border-white/10 bg-[#0a1628]"
             >
-              <div className="flex h-full flex-col">
+              <div className="flex min-h-0 flex-1 flex-col">
                 <div className="flex h-20 items-center justify-between border-b border-white/10 px-5">
                   <div className="flex items-center gap-3">
                     <TrainFront className="h-6 w-6 text-blue-400" />
@@ -164,7 +164,7 @@ function Layout() {
                   </button>
                 </div>
 
-                <nav className="space-y-1 px-3 py-6">
+                <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-6">
                   {navigation.map((item) => {
                     const Icon = item.icon;
 
