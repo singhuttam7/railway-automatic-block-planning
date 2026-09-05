@@ -33,6 +33,58 @@ class BlockOptimizationModel:
         return self.variables
 
     # ============================================================
+    # ADD GROUP MUTUAL-EXCLUSION CONSTRAINTS
+    # ============================================================
+
+    def add_group_constraints(self, candidates):
+        """
+        Ensure that at most ONE candidate is selected
+        from each original request/group.
+
+        This is important when alternative time slots are
+        generated for the same maintenance request.
+
+        Example:
+
+            Group 5
+              Candidate 101 -> 10:00-12:00
+              Candidate 102 -> 13:00-15:00
+              Candidate 103 -> 16:00-18:00
+
+        OR-Tools can select:
+
+            101 OR 102 OR 103
+
+        but never two or more of them.
+        """
+
+        groups = {}
+
+        for candidate in candidates:
+
+            group_id = candidate.get("group_id")
+
+            # Candidates without a group_id are treated
+            # as independent candidates.
+            if group_id is None:
+                continue
+
+            groups.setdefault(group_id, []).append(
+                candidate["candidate_block"]
+            )
+
+        for group_id, candidate_ids in groups.items():
+
+            variables = [
+                self.variables[candidate_id]
+                for candidate_id in candidate_ids
+            ]
+
+            self.model.Add(
+                sum(variables) <= 1
+            )
+
+    # ============================================================
     # ADD CANDIDATE CONFLICT CONSTRAINTS
     # ============================================================
 
@@ -108,6 +160,41 @@ class BlockOptimizationModel:
                 )
 
     # ============================================================
+    # ADD TRAIN CONFLICT CONSTRAINTS
+    # ============================================================
+
+    def add_train_conflict_constraints(self, candidates):
+        """
+        Train conflicts are treated as HARD constraints.
+
+        A candidate block having one or more train conflicts
+        cannot be selected.
+
+        train_conflict_count > 0
+            -> candidate rejected
+
+        train_conflict_count == 0
+            -> candidate remains feasible
+        """
+
+        for candidate in candidates:
+
+            train_conflicts = candidate.get(
+                "train_conflict_count",
+                0
+            )
+
+            if train_conflicts > 0:
+
+                candidate_id = candidate["candidate_block"]
+
+                variable = self.variables[candidate_id]
+
+                self.model.Add(
+                    variable == 0
+                )
+
+    # ============================================================
     # ADD OBJECTIVE
     # ============================================================
 
@@ -119,8 +206,10 @@ class BlockOptimizationModel:
         Higher priority, better coordination and
         time savings increase the score.
 
-        Train conflicts, goods conflicts and long
-        blocks reduce the score.
+        Goods conflicts and long blocks reduce the score.
+
+        Train conflicts are handled as HARD constraints
+        and therefore are not selected.
         """
 
         objective_terms = []
@@ -167,8 +256,13 @@ class BlockOptimizationModel:
             )
 
             # ----------------------------------------------------
-            # Train conflict penalty
+            # Train conflicts
             # ----------------------------------------------------
+
+            # Train conflicts are already prohibited by
+            # add_train_conflict_constraints().
+            #
+            # Keep this penalty as an additional safeguard.
 
             train_conflicts = candidate.get(
                 "train_conflict_count",
@@ -206,6 +300,14 @@ class BlockOptimizationModel:
             )
 
             # ----------------------------------------------------
+            # Time deviation penalty
+            # ----------------------------------------------------
+
+            time_deviation = candidate.get("time_deviation_hours",0)
+
+            time_deviation_penalty = (time_deviation * 10)
+
+            # ----------------------------------------------------
             # Final score
             # ----------------------------------------------------
 
@@ -216,12 +318,23 @@ class BlockOptimizationModel:
                 - train_penalty
                 - goods_penalty
                 - duration_penalty
+                - time_deviation_penalty
             )
 
-            # CP-SAT works with integer coefficients
+            # CP-SAT requires integer coefficients.
+            #
+            # Multiplying by 100 preserves more precision than
+            # directly converting the score to int.
+
+            score_scaled = int(round(score * 100))
+
             objective_terms.append(
-                int(score) * variable
+                score_scaled * variable
             )
+
+        # --------------------------------------------------------
+        # Maximize objective
+        # --------------------------------------------------------
 
         self.model.Maximize(
             sum(objective_terms)
@@ -261,6 +374,8 @@ class BlockOptimizationModel:
 
         return {
             "status": solver.StatusName(status),
+
             "selected_blocks": selected_blocks,
+
             "objective_value": solver.ObjectiveValue(),
         }
