@@ -16,6 +16,16 @@ class OptimizedBlockDetailService:
             )
             .first()
         )
+    def get_all_blocks(self):
+        return (
+            self.db.query(OptimizedBlock)
+            .order_by(
+                OptimizedBlock.block_date,
+                OptimizedBlock.start_time,
+            )
+            .all()
+        )
+
 
     def close(self):
         self.db.close()
