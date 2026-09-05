@@ -1,3 +1,5 @@
+from collections import Counter
+
 from app.optimizer.block_optimizer import BlockOptimizer
 from app.optimizer.optimization_model import BlockOptimizationModel
 from app.services.optimized_block_service import OptimizedBlockService
@@ -91,6 +93,14 @@ def main():
             feasible_candidates
         )
 
+        # Only one alternative candidate can be selected
+        # for each original request group.
+        model.add_group_constraints(
+            feasible_candidates
+        )
+
+        # Prevent overlapping blocks on the same
+        # corridor and date.
         model.add_conflict_constraints(
             feasible_candidates
         )
@@ -135,7 +145,6 @@ def main():
         print("\nSelected Candidate IDs:")
 
         for candidate_id in result["selected_blocks"]:
-
             print(
                 f"  Candidate Block {candidate_id}"
             )
@@ -153,6 +162,56 @@ def main():
             for candidate in feasible_candidates
             if candidate["candidate_block"] in selected_ids
         ]
+
+        # ========================================================
+        # STEP 10.1: VERIFY GROUP CONSTRAINT
+        # ========================================================
+
+        selected_group_ids = [
+            candidate.get("group_id")
+            for candidate in selected_candidates
+            if candidate.get("group_id") is not None
+        ]
+
+        group_counts = Counter(selected_group_ids)
+
+        duplicate_groups = {
+            group_id: count
+            for group_id, count in group_counts.items()
+            if count > 1
+        }
+
+        print("\n" + "=" * 80)
+        print("GROUP CONSTRAINT VERIFICATION")
+        print("=" * 80)
+
+        print(
+            f"\nSelected candidates : "
+            f"{len(selected_candidates)}"
+        )
+
+        print(
+            f"Unique groups       : "
+            f"{len(group_counts)}"
+        )
+
+        if duplicate_groups:
+
+            print("\nWARNING: Duplicate groups found!")
+
+            for group_id, count in duplicate_groups.items():
+
+                print(
+                    f"  Group {group_id}: "
+                    f"{count} candidates"
+                )
+
+        else:
+
+            print(
+                "\nSUCCESS: No group has more than "
+                "one selected candidate."
+            )
 
         # ========================================================
         # STEP 11: SAVE SELECTED BLOCKS TO DATABASE
@@ -270,7 +329,9 @@ def main():
                 f"  {block.optimized_block_id}"
             )
 
-        print("\nOptimization and database persistence completed.")
+        print(
+            "\nOptimization and database persistence completed."
+        )
 
     except Exception as error:
 
