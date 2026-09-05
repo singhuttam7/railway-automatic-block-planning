@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.database.database import SessionLocal
 from app.models.block_request import BlockRequest
@@ -80,6 +80,80 @@ class BlockOptimizer:
             block_start < train.end_time
             and train.start_time < block_end
         )
+
+    # ============================================================
+    # GENERATE ALTERNATIVE TIME SLOTS
+    # ============================================================
+
+    def generate_alternative_slots(
+        self,
+        corridor_id,
+        block_date,
+        duration,
+        slot_step_minutes=30
+    ):
+        """
+        Generate alternative time slots on the same
+        corridor and date that do not conflict with trains.
+
+        Search window:
+            06:00 to 22:00
+
+        Slots are generated at 30-minute intervals by default.
+        """
+
+        day_start = (
+            datetime.combine(
+                block_date,
+                datetime.min.time()
+            )
+            + timedelta(hours=6)
+        )
+
+        day_end = (
+            datetime.combine(
+                block_date,
+                datetime.min.time()
+            )
+            + timedelta(hours=22)
+        )
+
+        trains = self.fetch_trains(
+            corridor_id,
+            block_date
+        )
+
+        alternative_slots = []
+
+        current_start = day_start
+
+        while current_start + duration <= day_end:
+
+            current_end = current_start + duration
+
+            train_conflict = any(
+                self.block_conflicts_with_train(
+                    current_start.time(),
+                    current_end.time(),
+                    train
+                )
+                for train in trains
+            )
+
+            if not train_conflict:
+
+                alternative_slots.append(
+                    {
+                        "start_time": current_start.time(),
+                        "end_time": current_end.time()
+                    }
+                )
+
+            current_start += timedelta(
+                minutes=slot_step_minutes
+            )
+
+        return alternative_slots
 
     # ============================================================
     # 5.5 FETCH GOODS FORECASTS
@@ -231,6 +305,7 @@ class BlockOptimizer:
             results.append(
                 {
                     "candidate_block": index,
+                    "group_id": index,
                     "corridor_id": corridor_id,
                     "block_date": block_date,
                     "start_time": start_time,
@@ -258,21 +333,44 @@ class BlockOptimizer:
         constraint_results
     ):
         """
-        Convert candidate block groups and their constraint
-        analysis into a format suitable for OR-Tools.
+        Convert candidate block groups into OR-Tools
+        optimization candidates.
+
+        If the original requested slot has no train conflict:
+            -> Keep the original slot.
+
+        If the original requested slot has a train conflict:
+            -> Generate alternative slots using the
+               complete group's duration.
+
+        Every candidate belonging to the same group receives
+        the same group_id.
+
+        The OR-Tools model can later enforce:
+            At most one candidate per group.
         """
 
         candidates = []
+
+        candidate_id = 1
 
         for index, group in enumerate(
             groups,
             start=1
         ):
 
+            # ----------------------------------------------------
+            # Extract requests
+            # ----------------------------------------------------
+
             requests = [
                 item[0]
                 for item in group
             ]
+
+            # ----------------------------------------------------
+            # Extract maintenance tasks
+            # ----------------------------------------------------
 
             tasks = [
                 item[1]
@@ -280,79 +378,40 @@ class BlockOptimizer:
             ]
 
             # ----------------------------------------------------
-            # Candidate time window
+            # Original block time
             # ----------------------------------------------------
 
-            start_time = min(
+            original_start = min(
                 request.start_time
                 for request in requests
             )
 
-            end_time = max(
+            original_end = max(
                 request.end_time
                 for request in requests
             )
 
             # ----------------------------------------------------
-            # Duration
+            # Corridor and date
             # ----------------------------------------------------
 
-            start_datetime = datetime.combine(
-                requests[0].requested_date,
-                start_time
-            )
-
-            end_datetime = datetime.combine(
-                requests[0].requested_date,
-                end_time
-            )
-
-            duration_hours = (
-                end_datetime - start_datetime
-            ).total_seconds() / 3600
+            corridor_id = requests[0].corridor_id
+            block_date = requests[0].requested_date
 
             # ----------------------------------------------------
-            # Total requested duration
+            # Calculate complete group duration
             # ----------------------------------------------------
 
-            total_requested_duration = sum(
-                request.duration_hours
-                for request in requests
-            )
-
-            # ----------------------------------------------------
-            # Time saving
-            # ----------------------------------------------------
-
-            time_saving = (
-                total_requested_duration
-                - duration_hours
-            )
-
-            # ----------------------------------------------------
-            # Department count
-            # ----------------------------------------------------
-
-            departments = {
-                task.asset.department_id
-                for task in tasks
-            }
-
-            department_count = len(
-                departments
-            )
-
-            # ----------------------------------------------------
-            # Priority
-            # ----------------------------------------------------
-
-            priority_score = max(
-                (
-                    task.priority_score
-                    if task.priority_score is not None
-                    else 0
+            original_duration = (
+                datetime.combine(
+                    block_date,
+                    original_end
                 )
-                for task in tasks
+                -
+                datetime.combine(
+                    block_date,
+                    original_start
+                )
             )
 
             # ----------------------------------------------------
@@ -365,38 +424,261 @@ class BlockOptimizer:
                 constraint["train_conflict_count"]
             )
 
-            goods_conflict_count = (
-                constraint["goods_conflict_count"]
-            )
-
             # ----------------------------------------------------
-            # Candidate block
+            # Determine candidate time slots
             # ----------------------------------------------------
 
-            candidate = {
-                "candidate_block": index,
-                "corridor_id": requests[0].corridor_id,
-                "block_date": requests[0].requested_date,
-                "start_time": start_time,
-                "end_time": end_time,
-                "duration_hours": duration_hours,
-                "time_saving": time_saving,
-                "department_count": department_count,
-                "priority_score": priority_score,
-                "train_conflict_count": train_conflict_count,
-                "goods_conflict_count": goods_conflict_count,
+            time_slots = []
 
-                # Original block requests included in
-                # this coordinated candidate block.
-                "block_request_ids": [
-                    request.block_request_id
+            # ----------------------------------------------------
+            # CASE 1:
+            # Original slot has no train conflict
+            # ----------------------------------------------------
+
+            if train_conflict_count == 0:
+
+                time_slots.append(
+                    {
+                        "start_time": original_start,
+                        "end_time": original_end
+                    }
+                )
+
+            # ----------------------------------------------------
+            # CASE 2:
+            # Original slot has train conflict
+            # ----------------------------------------------------
+
+            else:
+
+                alternative_slots = (
+                    self.generate_alternative_slots(
+                        corridor_id,
+                        block_date,
+                        original_duration
+                    )
+                )
+
+                # ------------------------------------------------
+                # Keep alternatives that fit the complete
+                # group duration.
+                # ------------------------------------------------
+
+                for slot in alternative_slots:
+
+                    slot_start = datetime.combine(
+                        block_date,
+                        slot["start_time"]
+                    )
+
+                    slot_end = (
+                        slot_start
+                        + original_duration
+                    )
+
+                    # Make sure the slot remains inside
+                    # the planning window.
+
+                    day_end = (
+                        datetime.combine(
+                            block_date,
+                            datetime.min.time()
+                        )
+                        + timedelta(hours=22)
+                    )
+
+                    if slot_end <= day_end:
+
+                        time_slots.append(
+                            {
+                                "start_time": slot_start.time(),
+                                "end_time": slot_end.time()
+                            }
+                        )
+
+            # ----------------------------------------------------
+            # Create candidates
+            # ----------------------------------------------------
+
+            for slot in time_slots:
+
+                start_time = slot["start_time"]
+                end_time = slot["end_time"]
+
+                # ------------------------------------------------
+                # Distance from originally requested time
+                # ------------------------------------------------
+                original_start_datetime = datetime.combine(
+                block_date,
+                original_start
+                )
+
+                candidate_start_datetime = datetime.combine(
+                block_date,
+                start_time
+                )
+
+
+
+                time_deviation_hours = abs((candidate_start_datetime - original_start_datetime).total_seconds()) / 3600
+
+                start_datetime = datetime.combine(
+                    block_date,
+                    start_time
+                )
+
+                end_datetime = datetime.combine(
+                    block_date,
+                    end_time
+                )
+
+                duration_hours = (
+                    end_datetime - start_datetime
+                ).total_seconds() / 3600
+
+                # ------------------------------------------------
+                # Total requested duration
+                # ------------------------------------------------
+
+                total_requested_duration = sum(
+                    request.duration_hours
                     for request in requests
-                ],
-            }
+                )
 
-            candidates.append(
-                candidate
-            )
+                # ------------------------------------------------
+                # Time saving
+                # ------------------------------------------------
+
+                time_saving = (
+                    total_requested_duration
+                    - duration_hours
+                )
+
+                # ------------------------------------------------
+                # Department count
+                # ------------------------------------------------
+
+                departments = {
+                    task.asset.department_id
+                    for task in tasks
+                }
+
+                department_count = len(
+                    departments
+                )
+
+                # ------------------------------------------------
+                # Priority
+                # ------------------------------------------------
+
+                priority_score = max(
+                    (
+                        task.priority_score
+                        if task.priority_score is not None
+                        else 0
+                    )
+                    for task in tasks
+                )
+
+                # ------------------------------------------------
+                # Fetch trains
+                # ------------------------------------------------
+
+                trains = self.fetch_trains(
+                    corridor_id,
+                    block_date
+                )
+
+                # ------------------------------------------------
+                # Find train conflicts
+                # ------------------------------------------------
+
+                train_conflicts = [
+                    train
+                    for train in trains
+                    if self.block_conflicts_with_train(
+                        start_time,
+                        end_time,
+                        train
+                    )
+                ]
+
+                # ------------------------------------------------
+                # Fetch goods forecasts
+                # ------------------------------------------------
+
+                goods_forecasts = (
+                    self.fetch_goods_forecasts(
+                        corridor_id,
+                        block_date
+                    )
+                )
+
+                # ------------------------------------------------
+                # Find goods conflicts
+                # ------------------------------------------------
+
+                goods_conflicts = [
+                    forecast
+                    for forecast in goods_forecasts
+                    if self.block_conflicts_with_goods(
+                        start_time,
+                        end_time,
+                        forecast
+                    )
+                ]
+
+                # ------------------------------------------------
+                # Candidate
+                # ------------------------------------------------
+
+                candidate = {
+
+                    # Unique candidate ID
+                    "candidate_block": candidate_id,
+
+                    # Important:
+                    # All alternatives for the same group
+                    # share this group_id.
+                    "group_id": index,
+
+                    "corridor_id": corridor_id,
+
+                    "block_date": block_date,
+
+                    "start_time": start_time,
+
+                    "end_time": end_time,
+
+                    "duration_hours": duration_hours,
+
+                    "time_saving": time_saving,
+
+                    "time_deviation_hours": time_deviation_hours,
+
+                    "department_count": department_count,
+
+                    "priority_score": priority_score,
+
+                    "train_conflict_count": len(
+                        train_conflicts
+                    ),
+
+                    "goods_conflict_count": len(
+                        goods_conflicts
+                    ),
+
+                    "block_request_ids": [
+                        request.block_request_id
+                        for request in requests
+                    ],
+                }
+
+                candidates.append(
+                    candidate
+                )
+
+                candidate_id += 1
 
         return candidates
 
@@ -626,6 +908,7 @@ class BlockOptimizer:
     # ============================================================
 
     def display_candidate_blocks(self, candidates):
+
         print("\n" + "=" * 80)
         print("CANDIDATE BLOCKS")
         print("=" * 80)
@@ -638,6 +921,11 @@ class BlockOptimizer:
             )
 
             print("-" * 80)
+
+            print(
+                f"Group ID          : "
+                f"{candidate['group_id']}"
+            )
 
             print(
                 f"Corridor          : "
