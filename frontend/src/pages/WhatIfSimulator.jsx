@@ -679,6 +679,101 @@ function WhatIfSimulator() {
               </div>
             )}
 
+            {/* Operational Impact */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-cyan-400" />
+                    <h3 className="text-lg font-semibold text-white">
+                      Operational Impact
+                    </h3>
+                  </div>
+
+                  <p className="mt-1 text-sm text-slate-400">
+                    AI analysis of trains and goods traffic affected by this
+                    scenario
+                  </p>
+                </div>
+
+                <div
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    simulationResult?.operational_impact?.risk_level === "High"
+                      ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                      : simulationResult?.operational_impact?.risk_level ===
+                          "Medium"
+                        ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                        : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                  }`}
+                >
+                  {simulationResult?.operational_impact?.risk_level ?? "Low"}{" "}
+                  Risk
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                {/* Affected Trains */}
+                <div className="rounded-xl border border-white/10 bg-slate-900/50 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10">
+                      <Network className="h-5 w-5 text-blue-400" />
+                    </div>
+
+                    <div>
+                      <p className="text-xs text-slate-400">Affected Trains</p>
+                      <p className="text-2xl font-bold text-white">
+                        {simulationResult?.operational_impact
+                          ?.affected_trains ?? 0}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Goods Forecast Conflicts */}
+                <div className="rounded-xl border border-white/10 bg-slate-900/50 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
+                      <TrendingUp className="h-5 w-5 text-amber-400" />
+                    </div>
+
+                    <div>
+                      <p className="text-xs text-slate-400">
+                        Goods Forecast Conflicts
+                      </p>
+                      <p className="text-2xl font-bold text-white">
+                        {simulationResult?.operational_impact
+                          ?.goods_forecast_conflicts ?? 0}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expected Goods Trains */}
+                <div className="rounded-xl border border-white/10 bg-slate-900/50 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10">
+                      <CalendarDays className="h-5 w-5 text-purple-400" />
+                    </div>
+
+                    <div>
+                      <p className="text-xs text-slate-400">
+                        Expected Goods Trains
+                      </p>
+                      <p className="text-2xl font-bold text-white">
+                        {simulationResult?.operational_impact
+                          ?.expected_goods_trains ?? 0}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
             {/* Alternatives */}
             <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-6">
               <div className="flex items-center justify-between">

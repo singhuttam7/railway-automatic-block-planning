@@ -170,7 +170,7 @@ def analyze_what_if(request: WhatIfRequest):
                     }
                 )
 
-                # 5. Find and rank intelligent alternative slots
+            # 5. Find and rank intelligent alternative slots
         alternative_slots = []
 
         required_duration = unavailable_duration
@@ -373,7 +373,71 @@ def analyze_what_if(request: WhatIfRequest):
 
         # Keep top 7 recommendations
         alternative_slots = alternative_slots[:7]
+                # ---------------------------------------------------------
+        # Operational impact analysis
+        # ---------------------------------------------------------
 
+        affected_trains = [
+            train
+            for train in trains
+            if (
+                request.start_time < train.end_time
+                and train.start_time
+                < minutes_to_time(unavailable_end)
+            )
+        ]
+
+        affected_goods_forecasts = [
+            forecast
+            for forecast in goods_forecasts
+            if (
+                request.start_time < forecast.end_time
+                and forecast.start_time
+                < minutes_to_time(unavailable_end)
+            )
+        ]
+
+        expected_affected_goods_trains = sum(
+            getattr(
+                forecast,
+                "expected_goods_trains",
+                0,
+            ) or 0
+            for forecast in affected_goods_forecasts
+        )
+
+        # Determine operational risk
+        if (
+            len(affected_trains) >= 5
+            or expected_affected_goods_trains >= 15
+        ):
+            operational_risk = "High"
+        elif (
+            len(affected_trains) > 0
+            or expected_affected_goods_trains > 0
+        ):
+            operational_risk = "Medium"
+        else:
+            operational_risk = "Low"
+
+        operational_impact = {
+            "affected_trains": len(affected_trains),
+            "goods_forecast_conflicts": len(
+                affected_goods_forecasts
+            ),
+            "expected_goods_trains": (
+                expected_affected_goods_trains
+            ),
+            "risk_level": operational_risk,
+        }
+
+        # ---------------------------------------------------------
+        # 6. Generate recommendation
+        # ---------------------------------------------------------
+
+        affected_count = len(
+            affected_blocks
+        )
         # ---------------------------------------------------------
         # 6. Generate recommendation
         # ---------------------------------------------------------
@@ -430,6 +494,7 @@ def analyze_what_if(request: WhatIfRequest):
             },
             "affected_blocks": affected_blocks,
             "affected_block_count": affected_count,
+            "operational_impact": operational_impact,
             "alternative_slots": alternative_slots,
             "alternative_slot_count": (
                 len(alternative_slots)

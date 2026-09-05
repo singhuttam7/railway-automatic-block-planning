@@ -41,6 +41,11 @@ const navigation = [
     icon: TrainFront,
   },
   {
+    name: "What-If Simulator",
+    path: "/what-if",
+    icon: BrainCircuit,
+  },
+  {
     name: "AI Intelligence",
     path: "/ai-intelligence",
     icon: BrainCircuit,

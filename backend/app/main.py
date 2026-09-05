@@ -19,6 +19,7 @@ from app.routes.goods_forecasts import (
     router as goods_forecasts_router
 )
 from app.routes import what_if
+from app.routes import ai_intelligence
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -47,6 +48,7 @@ app.include_router(optimization_runs_router)
 app.include_router(trains_router)
 app.include_router(goods_forecasts_router)
 app.include_router(what_if.router)
+app.include_router(ai_intelligence.router)
 
 
 @app.get("/")

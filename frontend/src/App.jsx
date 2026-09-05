@@ -6,6 +6,7 @@ import Corridors from "./pages/Corridors";
 import BlockPlanning from "./pages/BlockPlanning";
 import TrainsForecast from "./pages/TrainsForecast";
 import WhatIfSimulator from "./pages/WhatIfSimulator";
+import AIIntelligence from "./pages/AIIntelligence";
 
 function App() {
   return (
@@ -17,7 +18,8 @@ function App() {
           <Route path="/corridors" element={<Corridors />} />
           <Route path="/blocks" element={<BlockPlanning />} />
           <Route path="/trains" element={<TrainsForecast />} />
-          <Route path="/ai-intelligence" element={<WhatIfSimulator />} />
+          <Route path="/what-if" element={<WhatIfSimulator />} />
+          <Route path="/ai-intelligence" element={<AIIntelligence />} />
         </Route>
       </Routes>
     </BrowserRouter>
