@@ -18,6 +18,7 @@ from app.routes.trains import router as trains_router
 from app.routes.goods_forecasts import (
     router as goods_forecasts_router
 )
+from app.routes import what_if
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -45,6 +46,7 @@ app.include_router(optimized_block_details_router)
 app.include_router(optimization_runs_router)
 app.include_router(trains_router)
 app.include_router(goods_forecasts_router)
+app.include_router(what_if.router)
 
 
 @app.get("/")
