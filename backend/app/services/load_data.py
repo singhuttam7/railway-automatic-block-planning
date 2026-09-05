@@ -424,7 +424,7 @@ def load_data(db: Session):
                     # Database:
                     # start_time
                     start_time=pd.to_datetime(
-                        row["arrival_time"]
+                        row["departure_time"]
                     ).time(),
 
                     # CSV:
@@ -433,7 +433,7 @@ def load_data(db: Session):
                     # Database:
                     # end_time
                     end_time=pd.to_datetime(
-                        row["departure_time"]
+                        row["arrival_time"]
                     ).time(),
                 )
             )
