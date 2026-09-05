@@ -15,6 +15,7 @@ import {
   TrendingUp,
   ExternalLink,
 } from "lucide-react";
+
 const API_URL = "http://127.0.0.1:8000";
 
 const presets = [
@@ -46,6 +47,10 @@ function WhatIfSimulator() {
   const [corridors, setCorridors] = useState([]);
   const [loadingCorridors, setLoadingCorridors] = useState(true);
 
+  const [simulationResult, setSimulationResult] = useState(null);
+  const [simulationLoading, setSimulationLoading] = useState(false);
+  const [simulationError, setSimulationError] = useState("");
+
   useEffect(() => {
     fetch(`${API_URL}/api/corridors/`)
       .then((response) => {
@@ -66,14 +71,46 @@ function WhatIfSimulator() {
       });
   }, []);
 
-  const runSimulation = () => {
-    if (!scenarioType || !corridor || !date || !startTime || !duration) return;
+  const runSimulation = async () => {
+    if (!scenarioType || !corridor || !date || !startTime || !duration) {
+      return;
+    }
 
     setSimulationStarted(false);
+    setSimulationResult(null);
+    setSimulationError("");
+    setSimulationLoading(true);
 
-    setTimeout(() => {
+    try {
+      const response = await fetch(`${API_URL}/api/what-if/analyze`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          corridor_id: corridor,
+          unavailable_date: date,
+          start_time: `${startTime}:00`,
+          duration_hours: Number(duration),
+          scenario_type: scenarioType,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Unable to run simulation");
+      }
+
+      setSimulationResult(data);
       setSimulationStarted(true);
-    }, 700);
+    } catch (error) {
+      console.error("What-If simulation error:", error);
+      setSimulationError(error.message || "Unable to run simulation");
+      setSimulationStarted(false);
+    } finally {
+      setSimulationLoading(false);
+    }
   };
 
   return (
@@ -85,7 +122,6 @@ function WhatIfSimulator() {
         transition={{ duration: 0.6 }}
         className="relative overflow-hidden rounded-3xl border border-indigo-400/10 bg-gradient-to-br from-indigo-500/[0.10] via-white/[0.035] to-cyan-400/[0.05] p-7 md:p-8"
       >
-        {/* Decorative glow */}
         <motion.div
           animate={{
             scale: [1, 1.15, 1],
@@ -176,6 +212,7 @@ function WhatIfSimulator() {
                   <p className="text-xs font-semibold text-slate-200">
                     {title}
                   </p>
+
                   <p className="mt-0.5 text-[10px] text-slate-500">{text}</p>
                 </div>
               </div>
@@ -198,6 +235,7 @@ function WhatIfSimulator() {
           <h2 className="text-base font-semibold text-white">
             Scenario Templates
           </h2>
+
           <p className="mt-1 text-xs text-slate-500">
             Start with a predefined operational scenario.
           </p>
@@ -354,6 +392,7 @@ function WhatIfSimulator() {
               />
             </div>
           </div>
+
           {/* Start Time */}
           <div>
             <label className="mb-2 block text-xs font-medium text-slate-400">
@@ -371,6 +410,7 @@ function WhatIfSimulator() {
               />
             </div>
           </div>
+
           {/* Duration */}
           <div>
             <label className="mb-2 block text-xs font-medium text-slate-400">
@@ -408,15 +448,47 @@ function WhatIfSimulator() {
             whileTap={{ scale: 0.98 }}
             onClick={runSimulation}
             disabled={
-              !scenarioType || !corridor || !date || !startTime || !duration
+              !scenarioType ||
+              !corridor ||
+              !date ||
+              !startTime ||
+              !duration ||
+              simulationLoading
             }
             className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/10 transition duration-300 hover:from-indigo-400 hover:to-blue-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <BrainCircuit className="h-4 w-4" />
-            Run AI Simulation
+
+            {simulationLoading ? "Analyzing Scenario..." : "Run AI Simulation"}
           </motion.button>
         </div>
       </motion.div>
+
+      {/* ERROR */}
+      <AnimatePresence>
+        {simulationError && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="rounded-2xl border border-red-400/20 bg-red-500/[0.05] p-5"
+          >
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 text-red-400" />
+
+              <div>
+                <h3 className="text-sm font-semibold text-red-300">
+                  Simulation Failed
+                </h3>
+
+                <p className="mt-1 text-xs text-red-400/80">
+                  {simulationError}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* RESULTS */}
       <AnimatePresence mode="wait">
@@ -471,17 +543,32 @@ function WhatIfSimulator() {
                   </div>
 
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-                    The planning engine recommends reallocating affected
-                    maintenance activities to alternative available windows
-                    while preserving critical maintenance priorities.
+                    {simulationResult?.recommendation}
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-center">
-                  <p className="text-[10px] uppercase tracking-wider text-emerald-400">
-                    Confidence
-                  </p>
-                  <p className="mt-1 text-2xl font-bold text-white">94%</p>
+                <div className="flex items-center gap-3">
+                  {/* Scenario */}
+                  <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-center">
+                    <p className="text-[10px] uppercase tracking-wider text-emerald-400">
+                      Scenario
+                    </p>
+
+                    <p className="mt-1 text-sm font-bold text-white">
+                      {simulationResult?.scenario?.scenario_type}
+                    </p>
+                  </div>
+
+                  {/* Confidence */}
+                  <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-center min-w-[100px]">
+                    <p className="text-[10px] uppercase tracking-wider text-emerald-400">
+                      Confidence
+                    </p>
+
+                    <p className="mt-1 text-2xl font-bold text-white">
+                      {simulationResult?.confidence ?? 0}%
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -491,21 +578,23 @@ function WhatIfSimulator() {
               {[
                 {
                   label: "Affected Blocks",
-                  value: "12",
+                  value: simulationResult?.affected_block_count ?? 0,
                   icon: Network,
-                  text: "blocks analyzed",
+                  text: "blocks affected",
                 },
                 {
                   label: "Alternative Slots",
-                  value: "7",
+                  value: simulationResult?.alternative_slot_count ?? 0,
                   icon: Clock3,
                   text: "feasible windows",
                 },
                 {
-                  label: "Asset Availability",
-                  value: "+8.4%",
+                  label: "Unavailable Window",
+                  value: simulationResult?.scenario
+                    ? `${simulationResult.scenario.start_time} – ${simulationResult.scenario.end_time}`
+                    : "--",
                   icon: TrendingUp,
-                  text: "estimated improvement",
+                  text: `${simulationResult?.scenario?.corridor_id ?? corridor} · ${simulationResult?.scenario?.unavailable_date ?? date}`,
                 },
               ].map((item, index) => {
                 const Icon = item.icon;
@@ -535,6 +624,61 @@ function WhatIfSimulator() {
               })}
             </div>
 
+            {/* Affected blocks */}
+            {simulationResult?.affected_blocks?.length > 0 && (
+              <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-semibold text-white">
+                      Affected Optimized Blocks
+                    </h2>
+
+                    <p className="mt-1 text-xs text-slate-500">
+                      Blocks overlapping the simulated unavailable window
+                    </p>
+                  </div>
+
+                  <Network className="h-5 w-5 text-indigo-400" />
+                </div>
+
+                <div className="mt-6 space-y-3">
+                  {simulationResult.affected_blocks.map((block, index) => (
+                    <motion.div
+                      key={block.optimized_block_id}
+                      initial={{ opacity: 0, x: -15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{
+                        delay: 0.1 + index * 0.05,
+                      }}
+                      className="flex flex-col gap-3 rounded-xl border border-white/5 bg-slate-900/40 p-4 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-white">
+                          {block.optimized_block_id}
+                        </p>
+
+                        <p className="mt-1 text-[11px] text-slate-500">
+                          {block.start_time} – {block.end_time}
+                          {" · "}
+                          {block.duration_hours} hours
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <span className="rounded-full bg-indigo-500/10 px-3 py-1 text-[10px] font-medium text-indigo-300">
+                          {block.department_count} departments
+                        </span>
+
+                        <span className="text-sm font-bold text-emerald-400">
+                          {block.optimization_score}
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Alternatives */}
             <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-6">
               <div className="flex items-center justify-between">
@@ -542,46 +686,104 @@ function WhatIfSimulator() {
                   <h2 className="text-base font-semibold text-white">
                     Recommended Alternative Windows
                   </h2>
+
                   <p className="mt-1 text-xs text-slate-500">
-                    AI-ranked feasible planning options
+                    Feasible planning options identified by the simulation
                   </p>
                 </div>
 
                 <Sparkles className="h-5 w-5 text-indigo-400" />
               </div>
 
-              <div className="mt-6 space-y-3">
-                {[
-                  ["06:00 – 08:00", "High", "94"],
-                  ["09:30 – 12:00", "Recommended", "91"],
-                  ["14:00 – 16:00", "Good", "84"],
-                ].map(([time, status, score], index) => (
-                  <motion.div
-                    key={time}
-                    initial={{ opacity: 0, x: -15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 + index * 0.1 }}
-                    className="flex flex-col gap-3 rounded-xl border border-white/5 bg-slate-900/40 p-4 transition hover:border-indigo-400/20 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-white">{time}</p>
-                      <p className="mt-1 text-[11px] text-slate-500">
-                        {corridor} · {date}
-                      </p>
-                    </div>
+              {simulationResult?.alternative_slots?.length > 0 ? (
+                <div className="mt-6 space-y-3">
+                  {simulationResult.alternative_slots.map((slot, index) => (
+                    <motion.div
+                      key={`${slot.start_time}-${slot.end_time}`}
+                      initial={{ opacity: 0, x: -15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{
+                        delay: 0.2 + index * 0.08,
+                      }}
+                      className="flex flex-col gap-3 rounded-xl border border-white/5 bg-slate-900/40 p-4 transition hover:border-indigo-400/20 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-white">
+                            {slot.start_time} – {slot.end_time}
+                          </p>
 
-                    <div className="flex items-center gap-4">
-                      <span className="rounded-full bg-indigo-500/10 px-3 py-1 text-[10px] font-medium text-indigo-300">
-                        {status}
-                      </span>
+                          {index === 0 && (
+                            <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-semibold uppercase text-emerald-400">
+                              Best Option
+                            </span>
+                          )}
+                        </div>
 
-                      <span className="text-sm font-bold text-emerald-400">
-                        {score}
-                      </span>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                        <p className="mt-1 text-[11px] text-slate-500">
+                          {simulationResult.scenario.corridor_id}
+                          {" · "}
+                          {simulationResult.scenario.unavailable_date}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-5">
+                        {/* AI Score */}
+                        <div className="text-center">
+                          <p className="text-[9px] uppercase tracking-wider text-slate-500">
+                            AI Score
+                          </p>
+
+                          <p className="text-lg font-bold text-emerald-400">
+                            {slot.score}
+                          </p>
+                        </div>
+
+                        {/* Goods Impact */}
+                        <div className="text-center">
+                          <p className="text-[9px] uppercase tracking-wider text-slate-500">
+                            Goods Impact
+                          </p>
+
+                          <p className="text-sm font-semibold text-white">
+                            {slot.goods_conflicts} conflict
+                            {slot.goods_conflicts !== 1 ? "s" : ""}
+                          </p>
+
+                          <p className="text-[10px] text-slate-500">
+                            {slot.expected_goods_trains} expected trains
+                          </p>
+                        </div>
+
+                        {/* Status */}
+                        <div className="text-center">
+                          <span
+                            className={`rounded-full px-3 py-1 text-[10px] font-medium ${
+                              slot.status === "Recommended"
+                                ? "bg-emerald-500/10 text-emerald-400"
+                                : slot.status === "Good"
+                                  ? "bg-cyan-500/10 text-cyan-400"
+                                  : "bg-amber-500/10 text-amber-400"
+                            }`}
+                          >
+                            {slot.status}
+                          </span>
+
+                          <p className="mt-1 text-[10px] text-slate-500">
+                            Train conflicts: {slot.train_conflicts}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-6 rounded-xl border border-dashed border-white/10 p-6 text-center">
+                  <p className="text-xs text-slate-500">
+                    No feasible alternative windows were found.
+                  </p>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
