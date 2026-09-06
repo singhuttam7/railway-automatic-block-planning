@@ -1,108 +1,97 @@
+# 🚆 RailOptiX
 
-# Railway Automatic Block Planning
+## AI-Powered Automatic Block Planning & Optimization for Indian Railways
 
-An AI-powered automatic block planning system for Indian Railways that integrates maintenance, defect, corridor, and train operation data to generate optimized maintenance block schedules.
+RailOptiX is an AI-powered railway maintenance block planning and optimization system designed to coordinate maintenance activities across Engineering, Traction Distribution (TRD), and Signal & Telecommunication (S&T) departments.
 
-## Problem Statement
+The system combines an AI-based maintenance priority engine with constraint-based optimization using Google OR-Tools to generate efficient weekly and monthly block plans while considering maintenance urgency, corridor availability, train operations, and multi-department coordination.
 
-Railway maintenance activities for Engineering, Traction Distribution (TRD), and Signal & Telecommunication (S&T) departments are currently planned independently. This decentralized approach can result in inefficient block utilization, poor coordination between departments, increased asset downtime, and disruption to train operations.
+---
 
-## Proposed Solution
+## 🎯 Problem Statement
 
-The system aims to provide a centralized, data-driven platform that:
+Railway maintenance activities are often planned independently by different departments. Maintenance requests, defects, asset information, corridor availability, and train schedules may exist across different systems.
 
-* Integrates maintenance and defect data from TMS, SMMS, and TDMS
-* Integrates train timetable, corridor availability, and goods-train forecasts
-* Prioritizes maintenance activities based on criticality, urgency, safety risk, and asset impact
-* Coordinates maintenance activities across multiple departments
-* Optimizes maintenance block schedules using operational constraints
-* Generates weekly and monthly maintenance plans
-* Provides explainable recommendations and what-if scheduling simulations
-* Maximizes asset availability while minimizing downtime and train disruption
+This can lead to:
 
-## System Architecture
+- Inefficient utilization of maintenance blocks
+- Conflicts between maintenance activities
+- Poor coordination between departments
+- Increased asset downtime
+- Under-utilized maintenance windows
+- Unnecessary impact on train operations
+- Difficulty in creating optimized weekly and monthly block plans
+
+RailOptiX addresses these challenges through centralized data processing, AI-assisted prioritization, and mathematical optimization.
+
+---
+
+## 💡 Our Solution
+
+RailOptiX integrates railway maintenance and operational information into a unified planning workflow.
+
+The system:
+
+1. Collects maintenance tasks, defects, assets, corridors, train schedules, and goods-train forecasts.
+2. Calculates maintenance priority using criticality, urgency, and asset impact.
+3. Identifies compatible maintenance activities.
+4. Uses Google OR-Tools to optimize block allocation.
+5. Coordinates activities across multiple departments.
+6. Generates optimized block plans.
+7. Provides operational impact analysis.
+8. Allows planners to perform What-If simulations.
+9. Presents planning insights through an interactive dashboard.
+
+---
+
+## ✨ Key Features
+
+### 🤖 AI Maintenance Priority Engine
+
+Automatically evaluates maintenance tasks and classifies them based on priority:
+
+- Critical
+- High
+- Medium
+- Low
+
+Priority is influenced by factors such as:
+
+- Asset criticality
+- Maintenance urgency
+- Defect severity
+- Impact on asset availability
+
+---
+
+### 🧠 Constraint-Based Block Optimization
+
+RailOptiX uses Google OR-Tools to determine feasible and efficient maintenance block schedules.
+
+The optimizer considers:
+
+- Block duration
+- Corridor availability
+- Maintenance requirements
+- Department requirements
+- Scheduling conflicts
+- Train operations
+- Multi-department coordination
+
+---
+
+### 🚧 Multi-Department Block Coordination
+
+RailOptiX can identify maintenance activities from different departments that can potentially be performed within a coordinated block.
+
+For example:
 
 ```text
-TMS ─────┐
-SMMS ────┤
-TDMS ────┤
-COA ─────┤──► Data Integration
-BDMS ────┘          │
-                    ▼
-             AI Priority Engine
-                    │
-                    ▼
-           Block Optimization Engine
-                    │
-                    ▼
-          Weekly / Monthly Block Plan
-                    │
-                    ▼
-             Web Dashboard
+Engineering
+      +
+S&T
+      +
+TRD
+      ↓
+Common Maintenance Block
 ```
-
-## Key Features
-
-* Multi-department maintenance coordination
-* AI-based maintenance priority scoring
-* Automatic block scheduling
-* Train conflict detection
-* Corridor availability analysis
-* Multi-department block consolidation
-* Weekly and monthly planning
-* Asset availability monitoring
-* What-if simulation
-* Explainable AI recommendations
-* Planning and performance reports
-
-## Technology Stack
-
-### Backend
-
-* Python
-* FastAPI
-* SQLAlchemy
-* PostgreSQL
-
-### AI/ML
-
-* Python
-* Pandas
-* NumPy
-* Scikit-learn
-
-### Optimization
-
-* Google OR-Tools
-
-### Frontend
-
-* React
-* Tailwind CSS
-* Recharts
-
-## Project Status
-
-🚧 **Under Development**
-
-### Development Roadmap
-
-* [x] Project initialization
-* [x] Backend environment setup
-* [ ] Synthetic railway dataset
-* [ ] Database design
-* [ ] FastAPI backend
-* [ ] Maintenance priority engine
-* [ ] Block optimization engine
-* [ ] Weekly planning
-* [ ] Monthly planning
-* [ ] React dashboard
-* [ ] What-if simulator
-* [ ] Reports and analytics
-* [ ] Testing
-* [ ] Dockerization
-* [ ] Deployment
-
-## Disclaimer
-
-This project is a prototype developed for demonstration and research purposes. Railway systems and operational data are represented using simulated/synthetic data unless otherwise specified.
