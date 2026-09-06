@@ -465,3 +465,196 @@ The system can be extended with:
 - Kubernetes-based deployment
 
 These improvements would help transition RailOptiX from a prototype into a production-grade railway planning platform.
+
+```
+┌───────────────────────────────────────────────────────────────────────┐
+│                         RAILOPTIX USERS                              │
+│                                                                       │
+│  Railway Planner     Control Office     Engineering     S&T     TRD   │
+└──────────────────────────────────┬────────────────────────────────────┘
+                                   │
+                                   │ HTTPS
+                                   ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                         PRESENTATION LAYER                            │
+│                         React + Vite                                  │
+│                                                                       │
+│ ┌───────────┐ ┌────────────┐ ┌──────────┐ ┌───────────────┐           │
+│ │ Dashboard │ │ Maintenance│ │ Corridors│ │ Block Planning│           │
+│ └───────────┘ └────────────┘ └──────────┘ └───────────────┘           │
+│                                                                       │
+│ ┌───────────────┐ ┌──────────────────┐ ┌─────────────────┐            │
+│ │ Train Forecast│ │ What-If Simulator │ │ AI Intelligence │            │
+│ └───────────────┘ └──────────────────┘ └─────────────────┘            │
+└──────────────────────────────────┬────────────────────────────────────┘
+                                   │
+                                   │ REST API
+                                   ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                            API LAYER                                  │
+│                         FastAPI Backend                               │
+│                                                                       │
+│ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌──────────────┐          │
+│ │ Dashboard  │ │ Maintenance│ │ Priority   │ │ Corridors    │          │
+│ │ API        │ │ API        │ │ API        │ │ API          │          │
+│ └────────────┘ └────────────┘ └────────────┘ └──────────────┘          │
+│                                                                       │
+│ ┌────────────┐ ┌───────────────┐ ┌──────────────┐ ┌──────────────┐     │
+│ │ Train API  │ │ Optimized     │ │ What-If API  │ │ AI           │     │
+│ │            │ │ Block API     │ │              │ │ Intelligence │     │
+│ └────────────┘ └───────────────┘ └──────────────┘ └──────────────┘     │
+└──────────────────────────────────┬────────────────────────────────────┘
+                                   │
+                                   ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                       APPLICATION LAYER                               │
+│                                                                       │
+│ ┌──────────────────────────────┐                                      │
+│ │      DATA PROCESSING         │                                      │
+│ │                              │                                      │
+│ │ Data Loading → Validation    │                                      │
+│ │             → Transformation│                                      │
+│ └───────────────┬──────────────┘                                      │
+│                 │                                                     │
+│                 ▼                                                     │
+│ ┌─────────────────────────────────────────────────────────────────┐   │
+│ │                    AI PRIORITY ENGINE                           │   │
+│ │                                                                 │   │
+│ │ Asset Criticality ─┐                                           │   │
+│ │ Maintenance Urgency├──► Priority Score ──► Priority Level     │   │
+│ │ Defect Severity ───┤                      Critical / High      │   │
+│ │ Availability Impact┘                      Medium / Low         │   │
+│ └───────────────────────────────┬─────────────────────────────────┘   │
+│                                 │                                     │
+│                                 │ Prioritized Tasks                   │
+│                                 ▼                                     │
+│ ┌─────────────────────────────────────────────────────────────────┐   │
+│ │                    OR-TOOLS OPTIMIZER                           │   │
+│ │                                                                 │   │
+│ │ Decision Variables                                              │   │
+│ │ Objective Function                                               │   │
+│ │ Corridor Availability                                            │   │
+│ │ Maintenance Duration                                             │   │
+│ │ Department Requirements                                          │   │
+│ │ Train Operation Constraints                                      │   │
+│ │ Multi-Department Consolidation                                   │   │
+│ └───────────────────────────────┬─────────────────────────────────┘   │
+│                                 │                                     │
+│                                 │ Candidate Schedule                  │
+│                                 ▼                                     │
+│ ┌─────────────────────────────────────────────────────────────────┐   │
+│ │                 CONSTRAINT VALIDATION                           │   │
+│ │                                                                 │   │
+│ │ Corridor Check │ Conflict Check │ Train Check │ Feasibility     │   │
+│ └───────────────────────────────┬─────────────────────────────────┘   │
+│                                 │                                     │
+│                                 ▼                                     │
+│                     ┌────────────────────────┐                        │
+│                     │  OPTIMIZED BLOCK PLAN  │                        │
+│                     │                        │                        │
+│                     │ Weekly / Monthly Plan  │                        │
+│                     └────────────┬───────────┘                        │
+└──────────────────────────────────┼────────────────────────────────────┘
+                                   │
+                                   │ Store / Retrieve
+                                   ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                         DATA LAYER                                    │
+│                         PostgreSQL                                    │
+│                                                                       │
+│ ┌──────────┐ ┌─────────┐ ┌──────────────┐ ┌─────────┐ ┌────────────┐ │
+│ │ Assets   │ │ Defects │ │ Maintenance  │ │Trains   │ │ Corridors  │ │
+│ └──────────┘ └─────────┘ │ Tasks        │ └─────────┘ └────────────┘ │
+│                           └──────────────┘                             │
+│                                                                       │
+│ ┌──────────────┐ ┌─────────────────┐ ┌────────────────────┐           │
+│ │ Departments  │ │ Block Requests  │ │ Optimization Runs  │           │
+│ └──────────────┘ └─────────────────┘ └────────────────────┘           │
+│                                                                       │
+│                    ┌─────────────────────┐                            │
+│                    │   Optimized Blocks  │                            │
+│                    └─────────────────────┘                            │
+└───────────────────────────────────────────────────────────────────────┘
+
+
+                         WHAT-IF SIMULATION
+                                  │
+                                  ▼
+                    ┌──────────────────────────┐
+                    │      Scenario Input      │
+                    └────────────┬─────────────┘
+                                 │
+                                 ▼
+                    ┌──────────────────────────┐
+                    │   Temporary Planning     │
+                    │         State            │
+                    └────────────┬─────────────┘
+                                 │
+                                 ▼
+                    ┌──────────────────────────┐
+                    │      Re-Optimization     │
+                    │       OR-Tools           │
+                    └────────────┬─────────────┘
+                                 │
+                                 ▼
+                    ┌──────────────────────────┐
+                    │    Operational Impact    │
+                    │        Analysis          │
+                    └──────────────────────────┘
+```
+
+## 🔗 Project Links
+
+| Resource             | Link                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| 🌐 Live Demo         | [RailOptiX](https://railway-automatic-block-planning-1.onrender.com)                 |
+| ⚡ Backend API       | [FastAPI Backend](https://railway-automatic-block-planning.onrender.com)             |
+| 📚 API Documentation | [Swagger UI](https://railway-automatic-block-planning.onrender.com/docs)             |
+| 💻 Source Code       | [GitHub Repository](https://github.com/singhuttam7/railway-automatic-block-planning) |
+
+## 👨‍💻 Developer
+
+### Uttam Kumar Singh
+
+Computer Science Engineering student and developer focused on building
+practical software solutions using Full-Stack Development, Artificial
+Intelligence, Machine Learning, and Optimization.
+
+I enjoy designing end-to-end applications that combine modern web
+technologies with intelligent decision-making systems.
+
+### 🛠️ Technical Interests
+
+- Full-Stack Development
+- Artificial Intelligence & Machine Learning
+- Python & FastAPI
+- React & JavaScript
+- Data Structures & Algorithms
+- PostgreSQL & Database Systems
+- Operations Research & Optimization
+- Docker & Cloud Deployment
+- Generative AI & LLM Applications
+
+### 🌐 Connect With Me
+
+- 💻 GitHub: [github.com/YOUR_USERNAME](https://github.com/singhuttam7)
+- 💼 LinkedIn: [linkedin.com/in/YOUR_USERNAME](https://www.linkedin.com/in/uttam-singh-b936a1310)
+- 📧 Email: `singhuttam786790@gmail.com`
+
+---
+
+## ⭐ Support
+
+If you find RailOptiX useful or interesting, consider giving the
+repository a ⭐ on GitHub.
+
+---
+
+<p align="center">
+  Built with ❤️ for smarter railway maintenance planning
+</p>
+
+<p align="center">
+  <b>RailOptiX</b> — AI-Powered Automatic Block Planning & Optimization
+  for Indian Railways
+</p>
