@@ -1,5 +1,19 @@
 from fastapi import FastAPI
 
+from app.database.base import Base
+from app.database.database import engine
+
+from app.models.asset import Asset
+from app.models.block_request import BlockRequest
+from app.models.corridor import Corridor
+from app.models.defect import Defect
+from app.models.department import Department
+from app.models.maintenance_task import MaintenanceTask
+from app.models.optimization_run import OptimizationRun
+from app.models.optimized_block_request import OptimizedBlockRequest
+from app.models.optimized_block import OptimizedBlock
+from app.models.train import Train
+
 from app.routes.priority import router as priority_router
 from app.routes.optimized_blocks import router as optimized_blocks_router
 from app.routes.planning import router as planning_router
@@ -29,6 +43,10 @@ app = FastAPI(
     description="AI-powered automatic block planning system for Indian Railways",
     version="1.0.0",
 )
+
+@app.on_event("startup")
+def create_tables():
+    Base.metadata.create_all(bind=engine)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
