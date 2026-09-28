@@ -415,7 +415,7 @@ function AIIntelligence() {
             </p>
 
             <p className="mt-1 text-sm font-semibold text-slate-200">
-              Uttam Kumar Singh
+              Gamma Coders
             </p>
 
             <div className="mt-2 flex items-center gap-4 md:justify-end">
@@ -427,7 +427,7 @@ function AIIntelligence() {
               >
                 GitHub
               </a>
-
+              {/*
               <a
                 href="https://www.linkedin.com/in/uttam-singh-b936a1310/"
                 target="_blank"
@@ -445,13 +445,14 @@ function AIIntelligence() {
               >
                 Instagram
               </a>
+              */}
             </div>
           </div>
         </div>
 
         {/* Copyright */}
         <div className="mt-7 flex flex-col gap-2 border-t border-white/5 pt-4 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-          <span>© 2026 Uttam Kumar Singh · All Rights Reserved</span>
+          <span>© 2026 Gamma Coders · All Rights Reserved</span>
 
           <span>AI • Optimization • Railway Operations</span>
         </div>
