@@ -894,11 +894,11 @@ function WhatIfSimulator() {
         <div className="flex flex-col gap-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
           <div>
             <p className="text-xs font-medium text-slate-400">
-              RAILOPTIMA · Intelligent Railway Block Planning
+              RailOptiX · Intelligent Railway Block Planning
             </p>
 
             <p className="mt-1 text-[11px] text-slate-600">
-              © {new Date().getFullYear()} Uttam Kumar Singh. All rights
+              © {new Date().getFullYear()} Gamma Coders. All rights
               reserved.
             </p>
           </div>
