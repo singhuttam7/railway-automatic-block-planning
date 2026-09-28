@@ -68,7 +68,7 @@ function Layout() {
 
             <div>
               <h1 className="text-sm font-bold tracking-wide">
-                RAIL<span className="text-blue-400">OPTIMA</span>
+                Rail<span className="text-blue-400">OptiX</span>
               </h1>
               <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
                 Block Intelligence
