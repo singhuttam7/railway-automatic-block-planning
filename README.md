@@ -658,3 +658,12 @@ repository a ⭐ on GitHub.
   <b>RailOptiX</b> — AI-Powered Automatic Block Planning & Optimization
   for Indian Railways
 </p>
+
+## License
+
+Copyright (c) 2026 Uttam Kumar Singh. All rights reserved. 
+
+This software and its source code are strictly private and confidential. 
+Unauthorized copying, modification, or distribution of this file, via 
+any medium, is strictly prohibited. 
+
